@@ -19,10 +19,12 @@ class Minesweeper
 
       if lose?(x,y)
         @solution_board.display
-        puts "You lose idiot!"
-        return
+        puts "You lose!!"
+        break
+      elsif won?
+        puts "You win!"
+        break
       end
-      return "You win!" if won?
     end
   end
 
@@ -36,8 +38,6 @@ class Minesweeper
     @user_board[[x,y]] == 'X'
   end
 
-
-
   def won?
     @solution_board.total_nums == @user_board.total_nums
   end
@@ -50,11 +50,6 @@ class Minesweeper
     @user_board.rows[x][y] = "*"
   end
 
-  def game_over
-    @user_board.display
-    puts "You lose"
-  end
-
   def reveal(x,y)
     @user_board[[x,y]] = @solution_board[[x,y]]
 
@@ -62,10 +57,11 @@ class Minesweeper
     already_checked = []
 
     until queue.empty?
-
       neighbor_pos = queue.shift
+
       next if already_checked.include?(neighbor_pos)
       next if @user_board[neighbor_pos] == 'F'
+
       already_checked << neighbor_pos
 
       if @solution_board[neighbor_pos].is_a?(Fixnum)
@@ -76,37 +72,26 @@ class Minesweeper
 
         neighbors = Board.get_neighbors([neighbor_pos[0],neighbor_pos[1]])
         queue += neighbors.reject {|el| already_checked.include?(el) || queue.include?(el)}
-
       end
     end
-    #next if bomb.
   end
-
-
-  def game_over
-    puts 'You lose'
-  end
-
 end
 
 class User
-
   def prompt
-    puts "The fuck u wanna do?"
+    puts "What would you like to do? (R)eveal, (F)lag, (U)nflag"
+    puts "For instance: R 3,5"
+
     input = gets.chomp.split(" ")
     user_action = input[0]
     x,y = input[1].split(",").map(&:to_i)
 
     [user_action, x, y]
   end
-
-
 end
 
-
-
 class Board
-  ROWS = 5
+  ROWS = 9
   attr_accessor :rows, :total_nums
 
   def self.blank_grid
@@ -119,13 +104,15 @@ class Board
   end
 
   def display
-    p @rows
+    @rows.each do |row|
+      puts row.join(" ")
+    end
   end
 
   def seed_bombs
     seeded_bombs = 0
 
-    until seeded_bombs == 1
+    until seeded_bombs == ROWS
       ran_x, ran_y = rand(ROWS), rand(ROWS)
 
       if @rows[ran_x][ran_y] == '*'
@@ -151,39 +138,36 @@ class Board
     end
   end
 
-
-  ##DANGER - dont wanna just frivolously modify this shit.
   def self.get_neighbors(pos)
-    [[0,1], [0,-1], [1,1], [-1,1],
-    [1,0], [-1,0], [-1,-1], [1,-1]
-  ].map {|elem| [elem[0]+pos[0], elem[1]+pos[1]]}.delete_if {|el| Board.out_of_bounds?(el)}
-end
-
-def count_neighboring_bombs(pos) #[x,y]
-  neighbors = Board.get_neighbors(pos)
-  number_of_bombs = 0
-
-  neighbors.each do |neighbor_pos|
-    number_of_bombs += 1 if self[neighbor_pos] == 'X'
+    offsets = [[0,1], [0,-1], [1,1], [-1,1], [1,0], [-1,0], [-1,-1], [1,-1]]
+    offsets.map {|elem| [elem[0]+pos[0], elem[1]+pos[1]]}.delete_if {|el| Board.out_of_bounds?(el)}
   end
 
-  number_of_bombs
-end
+  def count_neighboring_bombs(pos)
+    neighbors = Board.get_neighbors(pos)
+    number_of_bombs = 0
 
-def self.out_of_bounds?(pos)
-  pos[0] < 0 || pos[0] == ROWS || pos[1] < 0 || pos[1] == ROWS
-end
+    neighbors.each do |neighbor_pos|
+      number_of_bombs += 1 if self[neighbor_pos] == 'X'
+    end
 
-def [](pos)
-  x, y = pos[0], pos[1]
-  @rows[x][y]
-end
+    number_of_bombs
+  end
 
-def []=(pos, value)
-  x, y = pos[0], pos[1]
-  value = (value == "*" ? "_" : value)
-  @rows[x][y] = value
-end
+  def self.out_of_bounds?(pos)
+    pos[0] < 0 || pos[0] == ROWS || pos[1] < 0 || pos[1] == ROWS
+  end
+
+  def [](pos)
+    x, y = pos[0], pos[1]
+    @rows[x][y]
+  end
+
+  def []=(pos, value)
+    x, y = pos[0], pos[1]
+    value = (value == "*" ? "_" : value)
+    @rows[x][y] = value
+  end
 
 end
 
