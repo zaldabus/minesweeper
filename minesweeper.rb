@@ -1,3 +1,4 @@
+
 class Minesweeper
 
   attr_accessor :solution_board, :user_board
@@ -16,18 +17,31 @@ class Minesweeper
   end
 
   def turn
+    loop do
     @user_board.display
 
     user_input, x, y = @user.prompt
 
     reveal(x,y) if user_input == 'R'
+    flag(x,y) if user_input == 'F'
+    unflag(x,y) if user_input == 'U'
+    break if user_input == 'exit'
+  end
+  end
 
+  def flag(x,y)
+    @user_board[[x,y]] = 'F'
+  end
+
+  def unflag(x,y)
+    @user_board.rows[x][y] = "*"
   end
 
   def reveal(x,y)
     @user_board[[x,y]] = @solution_board[[x,y]]
 
     game_over if @user_board[[x,y]] == 'X'
+
 
   end
 
@@ -54,7 +68,8 @@ end
 
 
 class Board
-  attr_accessor :solution_board, :user_board
+  ROWS = 9
+  attr_accessor :rows
 
   def self.blank_grid
     Array.new(9) {Array.new(9) {"*"}} #then does this make sense?
@@ -82,6 +97,42 @@ class Board
         seeded_bombs += 1
       end
     end
+
+    add_nums
+  end
+
+  def add_nums
+    @rows.each_index do |i|
+      @rows.each_index do |j|
+        next if @rows[i][j] == 'X'
+        num_bombs = count_neighboring_bombs([i,j])
+        @rows[i][j] = num_bombs if num_bombs > 0
+      end
+    end
+  end
+
+  def count_neighboring_bombs(pos) #[x,y]
+    neighbors = [
+      [0,1],
+      [0,-1],
+      [1,1],
+      [-1,1],
+      [1,0],
+      [-1,0],
+      [-1,-1],
+      [1,-1]
+    ].map {|elem| [elem[0]+pos[0], elem[1]+pos[1]]}
+
+    num_bombs = 0
+    neighbors.each do |neighbor_pos|
+      next if out_of_bounds?(neighbor_pos)
+      num_bombs += 1 if self[neighbor_pos] == 'X'
+    end
+    num_bombs
+  end
+
+  def out_of_bounds?(pos)
+    pos[0] < 0 || pos[0] == ROWS || pos[1] < 0 || pos[1] == ROWS
   end
 
   def [](pos)
