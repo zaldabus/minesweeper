@@ -9,14 +9,14 @@ class Minesweeper
 
   def play
     @solution_board.seed_bombs
+    @solution_board.add_numbers_to_board
+
     loop do
       @user_board.display
 
       user_input, x, y = @user.prompt
+      player_action(user_input, x, y)
 
-      reveal(x,y) if user_input == 'R'
-      flag(x,y) if user_input == 'F'
-      unflag(x,y) if user_input == 'U'
       if lose?(x,y)
         @solution_board.display
         puts "You lose idiot!"
@@ -24,6 +24,12 @@ class Minesweeper
       end
       return "You win!" if won?
     end
+  end
+
+  def player_action(user_input, x, y)
+    reveal(x,y) if user_input == 'R'
+    flag(x,y) if user_input == 'F'
+    unflag(x,y) if user_input == 'U'
   end
 
   def lose?(x,y)
@@ -104,11 +110,10 @@ class Board
   attr_accessor :rows, :total_nums
 
   def self.blank_grid
-    Array.new(ROWS) {Array.new(ROWS) {"*"}} #then does this make sense?
+    Array.new(ROWS) {Array.new(ROWS) {"*"}}
   end
 
   def initialize(rows = self.class.blank_grid)
-    #this is in Minesweeper class. not board class irgh tnow.
     @rows = rows
     @total_nums = 0
   end
@@ -118,12 +123,10 @@ class Board
   end
 
   def seed_bombs
-    #how do we mark the bombs? just like B?
     seeded_bombs = 0
 
     until seeded_bombs == 1
-      ran_x = rand(ROWS)
-      ran_y = rand(ROWS)
+      ran_x, ran_y = rand(ROWS), rand(ROWS)
 
       if @rows[ran_x][ran_y] == '*'
         @rows[ran_x][ran_y] = 'X'
@@ -131,14 +134,15 @@ class Board
       end
     end
 
-    add_nums
   end
 
-  def add_nums
+  def add_numbers_to_board
     @rows.each_index do |i|
       @rows.each_index do |j|
         next if @rows[i][j] == 'X'
+
         num_bombs = count_neighboring_bombs([i,j])
+
         if num_bombs > 0
           @rows[i][j] = num_bombs
           @total_nums += 1
@@ -147,6 +151,8 @@ class Board
     end
   end
 
+
+  ##DANGER - dont wanna just frivolously modify this shit.
   def self.get_neighbors(pos)
     [[0,1], [0,-1], [1,1], [-1,1],
     [1,0], [-1,0], [-1,-1], [1,-1]
@@ -155,12 +161,13 @@ end
 
 def count_neighboring_bombs(pos) #[x,y]
   neighbors = Board.get_neighbors(pos)
+  number_of_bombs = 0
 
-  num_bombs = 0
   neighbors.each do |neighbor_pos|
-    num_bombs += 1 if self[neighbor_pos] == 'X'
+    number_of_bombs += 1 if self[neighbor_pos] == 'X'
   end
-  num_bombs
+
+  number_of_bombs
 end
 
 def self.out_of_bounds?(pos)
@@ -179,3 +186,6 @@ def []=(pos, value)
 end
 
 end
+
+g = Minesweeper.new
+g.play
