@@ -1,3 +1,6 @@
+require 'debugger'
+require 'yaml'
+require 'yaml/store'
 class Minesweeper
   attr_accessor :solution_board, :user_board
 
@@ -15,9 +18,10 @@ class Minesweeper
       @user_board.display
 
       user_input, x, y = @user.prompt
+      debugger
       player_action(user_input, x, y)
 
-      if lose?(x,y)
+      if y!= nil && lose?(x,y)
         @solution_board.display
         puts "You lose!!"
         break
@@ -28,10 +32,20 @@ class Minesweeper
     end
   end
 
-  def player_action(user_input, x, y)
+  def player_action(user_input, x="TEST", y=nil)
     reveal(x,y) if user_input == 'R'
     flag(x,y) if user_input == 'F'
     unflag(x,y) if user_input == 'U'
+    save(x) if user_input == 'S'
+    load(x) if user_input == 'L'
+  end
+
+  def save(filename)
+    File.open("#{filename}.yml", 'w') {|f| f.write(YAML.dump(self)) }
+  end
+
+  def load(filename)
+    YAML.load(File.read("#{filename}.yml"))
   end
 
   def lose?(x,y)
@@ -79,14 +93,19 @@ end
 
 class User
   def prompt
-    puts "What would you like to do? (R)eveal, (F)lag, (U)nflag"
+    puts "What would you like to do? (R)eveal, (F)lag, (U)nflag, (S)ave, (L)oad"
     puts "For instance: R 3,5"
 
     input = gets.chomp.split(" ")
     user_action = input[0]
-    x,y = input[1].split(",").map(&:to_i)
+    x,y = input[1].split(",")
 
-    [user_action, x, y]
+    if y == nil
+      [user_action, x]
+    else
+    [user_action, x.to_i, y.to_i]
+    end
+
   end
 end
 
@@ -171,5 +190,11 @@ class Board
 
 end
 
-g = Minesweeper.new
-g.play
+if __FILE__ == $PROGRAM_NAME
+  if ARGV.empty?
+    Minesweeper.new.play
+  else
+    load_game = ARGV.pop
+    YAML.load(File.read(load_game)).play
+  end
+end
