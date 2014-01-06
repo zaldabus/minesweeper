@@ -89,9 +89,10 @@ class Board
     @rows[x][y]
   end
 
-  def []=(pos)
+  def []=(pos, value)
     x, y = pos[0], pos[1]
-    @rows[x][y] = "_"
+    value = (value == "*" ? "_" : value)
+    @rows[x][y] = value
   end
 
 end
