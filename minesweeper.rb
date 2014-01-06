@@ -1,3 +1,4 @@
+require 'yaml'
 class Minesweeper
   attr_accessor :solution_board, :user_board
 
