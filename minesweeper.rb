@@ -11,6 +11,7 @@ class Minesweeper
   end
 
   def play
+    start_time = Time.now
     @solution_board.seed_bombs
     @solution_board.add_numbers_to_board
 
@@ -18,7 +19,6 @@ class Minesweeper
       @user_board.display
 
       user_input, x, y = @user.prompt
-      debugger
       player_action(user_input, x, y)
 
       if y!= nil && lose?(x,y)
@@ -26,10 +26,32 @@ class Minesweeper
         puts "You lose!!"
         break
       elsif won?
+        end_time = Time.now
+        save_time(end_time - start_time)
         puts "You win!"
+        display_top_ten_times
         break
       end
     end
+  end
+
+  def save_time(time_elapsed)
+    top_ten_times = []
+    if File.exists?("best_times.yml")
+      yaml_file = YAML.load(File.read("best_times.yml"))
+      top_ten_times += yaml_file
+    end
+
+    top_ten_times << time_elapsed
+    top_ten_times.sort!
+
+    File.open("best_times.yml", 'w') {|f| f.write(YAML.dump(top_ten_times[0..9])) }
+  end
+
+  def display_top_ten_times
+      yaml_file = YAML.load(File.read("best_times.yml"))
+      puts "HALL OF FAME:"
+      puts yaml_file
   end
 
   def player_action(user_input, x="TEST", y=nil)
@@ -45,7 +67,7 @@ class Minesweeper
   end
 
   def load(filename)
-    YAML.load(File.read("#{filename}.yml"))
+
   end
 
   def lose?(x,y)
@@ -110,7 +132,7 @@ class User
 end
 
 class Board
-  ROWS = 9
+  ROWS = 2
   attr_accessor :rows, :total_nums
 
   def self.blank_grid
