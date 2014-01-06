@@ -27,7 +27,7 @@ class Minesweeper
         break
       elsif won?
         end_time = Time.now
-        save_time(start_time-end_time)
+        save_time(end_time - start_time)
         puts "You win!"
         break
       end
@@ -35,8 +35,16 @@ class Minesweeper
   end
 
   def save_time(time_elapsed)
+    top_ten_times = []
+    if File.exists?("best_times.yml")
+      yaml_file = YAML.load(File.read("best_times.yml"))
+      top_ten_times += yaml_file
+    end
 
-File.open("best_times.yml", 'w') {|f| f.write(YAML.dump(time_elapsed)) }
+    top_ten_times << time_elapsed
+    top_ten_times.sort!
+
+    File.open("best_times.yml", 'w') {|f| f.write(YAML.dump(top_ten_times[0..9])) }
   end
 
   def player_action(user_input, x="TEST", y=nil)
