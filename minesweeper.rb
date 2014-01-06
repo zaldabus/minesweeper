@@ -29,6 +29,7 @@ class Minesweeper
         end_time = Time.now
         save_time(end_time - start_time)
         puts "You win!"
+        display_top_ten_times
         break
       end
     end
@@ -45,6 +46,12 @@ class Minesweeper
     top_ten_times.sort!
 
     File.open("best_times.yml", 'w') {|f| f.write(YAML.dump(top_ten_times[0..9])) }
+  end
+
+  def display_top_ten_times
+      yaml_file = YAML.load(File.read("best_times.yml"))
+      puts "HALL OF FAME:"
+      puts yaml_file
   end
 
   def player_action(user_input, x="TEST", y=nil)
